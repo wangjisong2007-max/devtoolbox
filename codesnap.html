@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CodeSnap - 代码截图美化工具</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0d1117;color:#c9d1d9;min-height:100vh}
+.header{background:#161b22;border-bottom:1px solid #30363d;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.logo{font-size:20px;font-weight:700;color:#58a6ff}
+.container{max-width:1000px;margin:0 auto;padding:20px}
+.editor-panel{display:flex;gap:16px;flex-wrap:wrap}
+.editor-left{flex:1;min-width:300px}
+.editor-right{flex:1;min-width:300px}
+label{display:block;font-size:13px;color:#8b949e;margin-bottom:4px;margin-top:12px}
+textarea{width:100%;background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:14px;color:#e6edf3;font-family:'SF Mono',Consolas,monospace;font-size:14px;line-height:1.6;resize:vertical;min-height:220px}
+textarea:focus,select:focus,input:focus{outline:none;border-color:#58a6ff;box-shadow:0 0 0 3px rgba(88,166,255,.15)}
+select{background:#21262d;border:1px solid #30363d;border-radius:6px;padding:8px 12px;color:#c9d1d9;font-size:13px;cursor:pointer;width:100%}
+.themes{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.theme-dot{width:28px;height:28px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .2s}
+.theme-dot:hover{transform:scale(1.15)}
+.theme-dot.active{border-color:#58a6ff;box-shadow:0 0 8px rgba(88,166,255,.5)}
+.preview-area{margin-top:16px;border-radius:8px;overflow:hidden;border:1px solid #30363d;position:relative}
+.preview-area canvas{display:block;width:100%}
+.actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.btn{padding:10px 20px;border-radius:6px;border:1px solid #30363d;background:#21262d;color:#c9d1d9;cursor:pointer;font-size:14px;transition:all .2s}
+.btn:hover{background:#30363d}
+.btn.primary{background:#238636;border-color:#238636;color:#fff}
+.btn.primary:hover{background:#2ea043}
+.btn.pro-only{background:#6e40c9;border-color:#6e40c9;color:#fff}
+.btn.pro-only:hover{background:#7c53d4}
+.options{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}
+.option{flex:1;min-width:120px}
+.watermark-badge{position:absolute;bottom:8px;right:12px;color:rgba(255,255,255,.3);font-size:10px;pointer-events:none}
+.pro-banner{background:linear-gradient(135deg,#1a2332,#4c2882);border:1px solid #6e40c9;border-radius:8px;padding:16px 20px;margin-top:16px;text-align:center}
+.pro-banner h3{color:#f0f6fc;margin-bottom:4px}
+.pro-banner p{color:#8b949e;font-size:13px;margin-bottom:10px}
+.toggle-row{display:flex;align-items:center;gap:8px;margin-top:8px}
+.toggle-row input[type="checkbox"]{width:18px;height:18px}
+</style>
+</head>
+<body>
+<div class="header">
+  <span class="logo">📸 CodeSnap</span>
+  <span style="color:#8b949e;font-size:13px">代码截图美化工具 · 免费使用</span>
+</div>
+
+<div class="container">
+  <div class="editor-panel">
+    <div class="editor-left">
+      <label>📝 粘贴代码</label>
+      <textarea id="code-input" placeholder="粘贴你的代码...
+function hello() {
+  console.log('Hello, World!');
+}"></textarea>
+      
+      <div class="options">
+        <div class="option">
+          <label>🎨 主题</label>
+          <div class="themes" id="theme-picker"></div>
+        </div>
+        <div class="option">
+          <label>🔤 字体大小</label>
+          <select id="font-size">
+            <option value="12">12px</option>
+            <option value="14" selected>14px</option>
+            <option value="16">16px</option>
+            <option value="18">18px</option>
+            <option value="20">20px</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="options">
+        <div class="option">
+          <label>📐 内边距</label>
+          <select id="padding">
+            <option value="20">紧凑 (20px)</option>
+            <option value="40" selected>标准 (40px)</option>
+            <option value="60">宽松 (60px)</option>
+            <option value="80">超大 (80px)</option>
+          </select>
+        </div>
+        <div class="option">
+          <label>🌐 语言</label>
+          <select id="language">
+            <option value="auto">自动检测</option>
+            <option value="js">JavaScript</option>
+            <option value="ts">TypeScript</option>
+            <option value="py">Python</option>
+            <option value="html">HTML</option>
+            <option value="css">CSS</option>
+            <option value="json">JSON</option>
+            <option value="bash">Bash</option>
+            <option value="go">Go</option>
+            <option value="rust">Rust</option>
+            <option value="java">Java</option>
+            <option value="sql">SQL</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="toggle-row">
+        <input type="checkbox" id="show-line-numbers" checked>
+        <label for="show-line-numbers" style="margin:0">显示行号</label>
+        <input type="checkbox" id="show-window" checked style="margin-left:16px">
+        <label for="show-window" style="margin:0">显示窗口按钮</label>
+      </div>
+    </div>
+
+    <div class="editor-right">
+      <label>👁 预览</label>
+      <div class="preview-area" id="preview-container">
+        <canvas id="preview-canvas"></canvas>
+        <div class="watermark-badge" id="watermark" style="display:none">CodeSnap Free</div>
+      </div>
+      
+      <div class="actions">
+        <button class="btn primary" id="download-free">📥 免费下载 (有水印)</button>
+        <button class="btn pro-only" id="download-hd">⭐ HD 无水印 (9.9元)</button>
+        <button class="btn" id="copy-clipboard">📋 复制到剪贴板</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="pro-banner">
+    <h3>🚀 升级 CodeSnap Pro — 仅需 9.9 元</h3>
+    <p>去除水印 · HD 高清导出 · 20+ 高级主题 · 自定义背景 · 批量生成</p>
+    <button class="btn pro-only" onclick="alert('请扫描微信/支付宝付款码，付款后在公众号发送【codesnap+付款截图】，获取激活码')">💎 立即升级 Pro</button>
+  </div>
+</div>
+
+<script>
+// Theme definitions
+const themes = [
+  {name:'GitHub Dark',bg:'#0d1117',text:'#c9d1d9',keyword:'#ff7b72',string:'#a5d6ff',comment:'#8b949e',fn:'#d2a8ff',num:'#79c0ff'},
+  {name:'VS Code Dark',bg:'#1e1e1e',text:'#d4d4d4',keyword:'#569cd6',string:'#ce9178',comment:'#6a9955',fn:'#dcdcaa',num:'#b5cea8'},
+  {name:'Dracula',bg:'#282a36',text:'#f8f8f2',keyword:'#ff79c6',string:'#f1fa8c',comment:'#6272a4',fn:'#50fa7b',num:'#bd93f9'},
+  {name:'Monokai',bg:'#272822',text:'#f8f8f2',keyword:'#f92672',string:'#e6db74',comment:'#75715e',fn:'#a6e22e',num:'#ae81ff'},
+  {name:'Nord',bg:'#2e3440',text:'#d8dee9',keyword:'#81a1c1',string:'#a3be8c',comment:'#616e88',fn:'#88c0d0',num:'#b48ead'},
+  {name:'Solarized Dark',bg:'#002b36',text:'#839496',keyword:'#859900',string:'#2aa198',comment:'#586e75',fn:'#268bd2',num:'#d33682'},
+  {name:'Tokyo Night',bg:'#1a1b26',text:'#a9b1d6',keyword:'#bb9af7',string:'#9ece6a',comment:'#565f89',fn:'#7aa2f7',num:'#ff9e64'},
+  {name:'One Dark',bg:'#282c34',text:'#abb2bf',keyword:'#c678dd',string:'#98c379',comment:'#5c6370',fn:'#61afef',num:'#d19a66'},
+  {name:'Catppuccin',bg:'#1e1e2e',text:'#cdd6f4',keyword:'#cba6f7',string:'#a6e3a1',comment:'#6c7086',fn:'#89b4fa',num:'#fab387'},
+  {name:'Gruvbox Dark',bg:'#282828',text:'#ebdbb2',keyword:'#fb4934',string:'#b8bb26',comment:'#928374',fn:'#fabd2f',num:'#d3869b'},
+  {name:'Pro Only',bg:'#1a1a2e',text:'#e0e0e0',locked:true},
+  {name:'Pro Only',bg:'#16213e',text:'#e0e0e0',locked:true},
+  {name:'Pro Only',bg:'#0f3460',text:'#e0e0e0',locked:true},
+  {name:'Pro Only',bg:'#533483',text:'#e0e0e0',locked:true},
+];
+
+let currentTheme = themes[0];
+let isPro = false;
+
+// Build theme picker
+const picker = document.getElementById('theme-picker');
+themes.forEach((t, i) => {
+  const dot = document.createElement('div');
+  dot.className = 'theme-dot' + (i === 0 ? ' active' : '');
+  dot.style.background = t.locked 
+    ? `linear-gradient(135deg, ${t.bg}, #6e40c9)` 
+    : t.bg;
+  dot.title = t.name + (t.locked ? ' (Pro)' : '');
+  dot.addEventListener('click', () => {
+    if (t.locked) {
+      alert(`🔒 "${t.name}" 需要 Pro 版本\n\n升级仅需 9.9 元，解锁全部 14 款主题 + HD 无水印导出`);
+      return;
+    }
+    document.querySelectorAll('.theme-dot').forEach(d => d.classList.remove('active'));
+    dot.classList.add('active');
+    currentTheme = t;
+    renderPreview();
+  });
+  picker.appendChild(dot);
+});
+
+// Simple syntax highlighting
+function tokenize(code, lang) {
+  const lines = code.split('\n');
+  const keywords = /\b(function|const|let|var|if|else|for|while|return|class|import|export|from|async|await|try|catch|throw|new|this|switch|case|break|continue|default|true|false|null|undefined|typeof|instanceof|in|of|do|yield|static|extends|super|get|set)\b/g;
+  const strings = /(["'`])(?:(?!\1)[^\\]|\\.)*\1/g;
+  const comments = /\/\/.*$/gm;
+  const functions = /\b([a-zA-Z_$][\w$]*)\s*\(/g;
+  const numbers = /\b(\d+\.?\d*)\b/g;
+
+  return lines.map((line, i) => {
+    let html = escapeHtml(line);
+    html = html.replace(strings, m => `<span style="color:${currentTheme.string}">${m}</span>`);
+    html = html.replace(comments, m => `<span style="color:${currentTheme.comment};font-style:italic">${m}</span>`);
+    html = html.replace(keywords, m => `<span style="color:${currentTheme.keyword}">${m}</span>`);
+    html = html.replace(numbers, m => `<span style="color:${currentTheme.num}">${m}</span>`);
+    html = html.replace(functions, (m, name) => name === 'function' ? m : `<span style="color:${currentTheme.fn}">${name}</span>(`);
+    return {line: i+1, html};
+  });
+}
+
+function escapeHtml(text) {
+  return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function renderPreview() {
+  const code = document.getElementById('code-input').value || '// 粘贴代码到左侧...';
+  const padding = parseInt(document.getElementById('padding').value);
+  const fontSize = parseInt(document.getElementById('font-size').value);
+  const showLines = document.getElementById('show-line-numbers').checked;
+  const showWindow = document.getElementById('show-window').checked;
+  const lang = document.getElementById('language').value;
+
+  const tokens = tokenize(code, lang);
+  const lineHeight = fontSize * 1.7;
+  const lineNumWidth = showLines ? 50 : 0;
+  
+  // Measure needed width
+  const canvas = document.getElementById('preview-canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.font = `${fontSize}px "SF Mono", Consolas, "Liberation Mono", monospace`;
+  
+  let maxWidth = 200;
+  tokens.forEach(t => {
+    const w = ctx.measureText(t.html.replace(/<[^>]*>/g, '')).width;
+    if (w > maxWidth) maxWidth = w;
+  });
+
+  const headerH = showWindow ? 36 : 0;
+  const totalW = padding * 2 + lineNumWidth + maxWidth + 40;
+  const totalH = padding * 2 + headerH + tokens.length * lineHeight + 20;
+  
+  // Set canvas size (2x for retina)
+  const scale = 2;
+  canvas.width = totalW * scale;
+  canvas.height = totalH * scale;
+  canvas.style.width = totalW + 'px';
+  canvas.style.height = totalH + 'px';
+  ctx.scale(scale, scale);
+
+  // Background
+  ctx.fillStyle = currentTheme.bg;
+  roundRect(ctx, 0, 0, totalW, totalH, 10);
+  ctx.fill();
+
+  // Window buttons
+  if (showWindow) {
+    ctx.fillStyle = '#ff5f56';
+    ctx.beginPath(); ctx.arc(28, 20, 7, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#ffbd2e';
+    ctx.beginPath(); ctx.arc(48, 20, 7, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#27c93f';
+    ctx.beginPath(); ctx.arc(68, 20, 7, 0, Math.PI*2); ctx.fill();
+    
+    // Language label
+    ctx.fillStyle = currentTheme.comment;
+    ctx.font = '11px -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(lang === 'auto' ? 'code' : lang, totalW/2, 23);
+    ctx.textAlign = 'start';
+  }
+
+  const startY = padding + headerH;
+  
+  // Draw lines
+  tokens.forEach((t, i) => {
+    const y = startY + i * lineHeight;
+    
+    // Line numbers
+    if (showLines) {
+      ctx.fillStyle = currentTheme.comment;
+      ctx.font = `${fontSize}px "SF Mono", Consolas, monospace`;
+      ctx.textAlign = 'right';
+      ctx.fillText(t.line.toString(), padding + lineNumWidth - 12, y + fontSize);
+      ctx.textAlign = 'start';
+    }
+    
+    // Code text (HTML rendering via fillText with styled spans is tricky in canvas)
+    // Simplified: just draw the text without highlighting
+    ctx.fillStyle = currentTheme.text;
+    ctx.font = `${fontSize}px "SF Mono", Consolas, "Liberation Mono", monospace`;
+    const text = code.split('\n')[i] || '';
+    ctx.fillText(text, padding + lineNumWidth + 8, y + fontSize);
+  });
+
+  // Watermark for free version
+  if (!isPro) {
+    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    ctx.font = '12px -apple-system, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('CodeSnap Free', totalW - 16, totalH - 12);
+    ctx.textAlign = 'start';
+  }
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r, y); ctx.lineTo(x+w-r, y);
+  ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+  ctx.lineTo(x+w, y+h-r);
+  ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+  ctx.lineTo(x+r, y+h);
+  ctx.quadraticCurveTo(x, y+h, x, y+h-r);
+  ctx.lineTo(x, y+r);
+  ctx.quadraticCurveTo(x, y, x+r, y);
+  ctx.closePath();
+}
+
+// Event listeners
+['code-input','font-size','padding','language'].forEach(id => {
+  document.getElementById(id).addEventListener('input', renderPreview);
+});
+['show-line-numbers','show-window'].forEach(id => {
+  document.getElementById(id).addEventListener('change', renderPreview);
+});
+
+// Download
+document.getElementById('download-free').addEventListener('click', () => {
+  const canvas = document.getElementById('preview-canvas');
+  const link = document.createElement('a');
+  link.download = 'codesnap.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+});
+
+document.getElementById('download-hd').addEventListener('click', () => {
+  alert('🔒 HD 无水印导出需要 Pro 版本\n\n升级仅需 9.9 元\n请扫描付款码，发送【codesnap+付款截图】获取激活码');
+});
+
+document.getElementById('copy-clipboard').addEventListener('click', () => {
+  const canvas = document.getElementById('preview-canvas');
+  canvas.toBlob(blob => {
+    navigator.clipboard.write([new ClipboardItem({'image/png': blob})])
+      .then(() => alert('✅ 已复制到剪贴板！'))
+      .catch(() => alert('复制失败，请使用下载功能'));
+  });
+});
+
+// Initialize with sample code
+document.getElementById('code-input').value = 
+`function fibonacci(n) {
+  if (n <= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+// Generate first 10 Fibonacci numbers
+const result = Array.from(
+  { length: 10 }, 
+  (_, i) => fibonacci(i)
+);
+
+console.log(result);
+// [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]`;
+
+renderPreview();
+
+// Handle window resize
+window.addEventListener('resize', renderPreview);
+</script>
+</body>
+</html>

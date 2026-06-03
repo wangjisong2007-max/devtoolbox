@@ -127,7 +127,7 @@ function hello() {
   <div class="pro-banner">
     <h3>🚀 升级 CodeSnap Pro — 仅需 9.9 元</h3>
     <p>去除水印 · HD 高清导出 · 20+ 高级主题 · 自定义背景 · 批量生成</p>
-    <button class="btn pro-only" onclick="alert('请扫描微信/支付宝付款码，付款后在公众号发送【codesnap+付款截图】，获取激活码')">💎 立即升级 Pro</button>
+    <button class="btn pro-only" onclick="document.getElementById('pay-modal').classList.add('show')">💎 立即升级 Pro</button>
   </div>
 </div>
 
@@ -320,7 +320,7 @@ document.getElementById('download-free').addEventListener('click', () => {
 });
 
 document.getElementById('download-hd').addEventListener('click', () => {
-  alert('🔒 HD 无水印导出需要 Pro 版本\n\n升级仅需 9.9 元\n请扫描付款码，发送【codesnap+付款截图】获取激活码');
+  document.getElementById('pay-modal').classList.add('show');
 });
 
 document.getElementById('copy-clipboard').addEventListener('click', () => {
@@ -353,5 +353,20 @@ renderPreview();
 // Handle window resize
 window.addEventListener('resize', renderPreview);
 </script>
+
+<div class="modal-overlay" id="pay-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center">
+  <div class="modal" style="background:#161b22;border:1px solid #30363d;border-radius:12px;padding:24px;max-width:360px;text-align:center">
+    <h3 style="color:#f0f6fc;margin-bottom:8px">📸 升级 CodeSnap Pro</h3>
+    <p style="color:#8b949e;font-size:13px;margin-bottom:16px">去除水印 · HD导出 · 20+高级主题</p>
+    <div style="font-size:24px;font-weight:700;color:#58a6ff;margin:8px 0">¥9.9</div>
+    <img src="wechat.jpg" alt="微信支付" style="max-width:220px;border-radius:8px;margin-bottom:12px">
+    <p style="font-size:12px;color:#6e7681">微信扫码支付 · 备注【codesnap】</p>
+    <button onclick="document.getElementById('pay-modal').style.display='none'" style="padding:8px 20px;border-radius:6px;border:1px solid #30363d;background:#21262d;color:#c9d1d9;cursor:pointer;margin-top:8px">关闭</button>
+  </div>
+</div>
+<script>
+document.getElementById('pay-modal').addEventListener('click', function(e){if(e.target===this)this.style.display='none'});
+</script>
+
 </body>
 </html>

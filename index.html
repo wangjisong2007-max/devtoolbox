@@ -39,6 +39,16 @@ textarea{min-height:200px}
 .pro-text{background:#238636}
 .pro-banner{background:#1a2332;border:1px solid #238636;border-radius:6px;padding:12px 16px;margin-top:16px;color:#8b949e;font-size:13px}
 @media(max-width:600px){.row{flex-direction:column}}
+
+/* Payment Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:24px;max-width:360px;text-align:center}
+.modal h3{color:#f0f6fc;margin-bottom:8px}
+.modal p{color:#8b949e;font-size:13px;margin-bottom:16px}
+.modal img{max-width:220px;border-radius:8px;margin-bottom:12px}
+.modal .price{font-size:24px;font-weight:700;color:#58a6ff;margin:8px 0}
+.modal .btn{margin:4px}
 </style>
 
 <!-- Counter.dev analytics - free, no account -->
@@ -378,5 +388,35 @@ document.getElementById('regex-test').addEventListener('click', () => {
 });
 
 </script>
+
+<div class="modal-overlay" id="pay-modal">
+  <div class="modal">
+    <h3>🚀 升级 DevToolBox Pro</h3>
+    <p>解锁全部高级工具 · HD无水印 · 持续更新</p>
+    <div class="price">¥9.9</div>
+    <img src="wechat.jpg" alt="微信支付">
+    <p style="font-size:12px;color:#6e7681">微信扫码支付 · 备注【devtoolbox】<br>支付后自动激活 Pro 功能</p>
+    <button class="btn" onclick="document.getElementById('pay-modal').classList.remove('show')">关闭</button>
+  </div>
+</div>
+<script>
+// Override Pro buttons to show modal
+document.querySelectorAll('a[href="#"]').forEach(a => {
+  if (a.textContent.includes('Pro') || a.textContent.includes('升级')) {
+    a.href = 'javascript:void(0)';
+    a.onclick = function(e) { e.preventDefault(); document.getElementById('pay-modal').classList.add('show'); };
+  }
+});
+document.querySelectorAll('button').forEach(b => {
+  if (b.textContent.includes('Pro') || b.textContent.includes('升级')) {
+    b.onclick = function() { document.getElementById('pay-modal').classList.add('show'); };
+  }
+});
+// Close on overlay click
+document.getElementById('pay-modal').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('show');
+});
+</script>
+
 </body>
 </html>

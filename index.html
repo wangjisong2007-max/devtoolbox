@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DevToolBox - 开发者工具箱</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0d1117;color:#c9d1d9;min-height:100vh}
+.header{background:#161b22;border-bottom:1px solid #30363d;padding:16px 24px;display:flex;align-items:center;gap:12px}
+.logo{font-size:22px;font-weight:700;color:#58a6ff}
+.subtitle{color:#8b949e;font-size:13px}
+.container{max-width:900px;margin:0 auto;padding:24px}
+.tabs{display:flex;gap:4px;margin-bottom:20px;flex-wrap:wrap}
+.tab{padding:8px 16px;border:1px solid #30363d;border-radius:6px 6px 0 0;background:#21262d;color:#8b949e;cursor:pointer;font-size:14px;transition:all .2s}
+.tab:hover{color:#c9d1d9;background:#30363d}
+.tab.active{background:#0d1117;color:#58a6ff;border-bottom-color:#0d1117}
+.panel{display:none;background:#0d1117;border:1px solid #30363d;border-radius:0 8px 8px 8px;padding:20px}
+.panel.active{display:block}
+.tool-title{font-size:18px;font-weight:600;margin-bottom:16px;color:#f0f6fc}
+textarea,input[type="text"]{width:100%;background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:12px;color:#c9d1d9;font-family:'SF Mono',Consolas,monospace;font-size:14px;resize:vertical}
+textarea:focus,input:focus{outline:none;border-color:#58a6ff;box-shadow:0 0 0 3px rgba(88,166,255,.15)}
+textarea{min-height:200px}
+.row{display:flex;gap:12px;align-items:flex-start;margin-top:12px}
+.row>*{flex:1}
+.btn{padding:10px 20px;border-radius:6px;border:1px solid #30363d;background:#21262d;color:#c9d1d9;cursor:pointer;font-size:14px;transition:all .2s;white-space:nowrap}
+.btn:hover{background:#30363d}
+.btn.primary{background:#238636;border-color:#238636;color:#fff}
+.btn.primary:hover{background:#2ea043}
+.btn.danger{background:#da3633;border-color:#da3633;color:#fff}
+.btn.danger:hover{background:#f85149}
+.btn.small{padding:6px 12px;font-size:12px}
+.output-area{background:#161b22;border:1px solid #30363d;border-radius:6px;padding:16px;margin-top:12px;font-family:'SF Mono',Consolas,monospace;font-size:13px;white-space:pre-wrap;word-break:break-all;max-height:350px;overflow-y:auto;color:#7ee787}
+.error{color:#f85149}
+.actions{display:flex;gap:8px;margin-top:12px}
+.footer{text-align:center;padding:24px;color:#484f58;font-size:12px;border-top:1px solid #30363d;margin-top:40px}
+.footer a{color:#58a6ff;text-decoration:none}
+.badge{display:inline-block;background:#1f6feb;color:#fff;padding:2px 8px;border-radius:10px;font-size:11px;margin-left:6px}
+.pro-text{background:#238636}
+.pro-banner{background:#1a2332;border:1px solid #238636;border-radius:6px;padding:12px 16px;margin-top:16px;color:#8b949e;font-size:13px}
+@media(max-width:600px){.row{flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="header">
+  <span class="logo">🔧 DevToolBox</span>
+  <span class="subtitle">开发者常用工具 · 免费使用</span>
+</div>
+<div class="container">
+  <div class="tabs">
+    <div class="tab active" data-panel="json">JSON 格式化</div>
+    <div class="tab" data-panel="timestamp">时间戳转换</div>
+    <div class="tab" data-panel="base64">Base64 编解码</div>
+    <div class="tab" data-panel="url">URL 编解码</div>
+
+    <div class="tab" data-panel="jwt">JWT 解码 <span class="badge pro-text">Pro</span></div>
+    <div class="tab" data-panel="regex">正则测试 <span class="badge pro-text">Pro</span></div>
+    <div class="tab" data-panel="hash">哈希计算 <span class="badge pro-text">Pro</span></div>
+    <div class="tab" data-panel="uuid">UUID 生成</div>
+  </div>
+
+  <!-- JSON Panel -->
+  <div class="panel active" id="panel-json">
+    <div class="tool-title">JSON 格式化 & 验证</div>
+    <textarea id="json-input" placeholder='粘贴 JSON 字符串，例如：{"name":"hello","items":[1,2,3]}'></textarea>
+    <div class="actions">
+      <button class="btn primary" id="json-format">格式化</button>
+      <button class="btn" id="json-minify">压缩</button>
+      <button class="btn danger small" id="json-clear">清空</button>
+    </div>
+    <div class="output-area" id="json-output"></div>
+  </div>
+
+  <!-- Timestamp Panel -->
+  <div class="panel" id="panel-timestamp">
+    <div class="tool-title">时间戳 ↔ 日期转换</div>
+    <input type="text" id="ts-input" placeholder="输入时间戳（秒/毫秒）或日期（2024-01-01 12:00:00）">
+    <div class="actions">
+      <button class="btn primary" id="ts-convert">转换</button>
+      <button class="btn" id="ts-now">当前时间戳</button>
+    </div>
+    <div class="output-area" id="ts-output"></div>
+  </div>
+
+  <!-- Base64 Panel -->
+  <div class="panel" id="panel-base64">
+    <div class="tool-title">Base64 编解码</div>
+    <textarea id="b64-input" placeholder="输入要编码/解码的文本"></textarea>
+    <div class="actions">
+      <button class="btn primary" id="b64-encode">编码 (Encode)</button>
+      <button class="btn" id="b64-decode">解码 (Decode)</button>
+    </div>
+    <div class="output-area" id="b64-output"></div>
+  </div>
+
+  <!-- URL Panel -->
+  <div class="panel" id="panel-url">
+    <div class="tool-title">URL 编解码</div>
+    <textarea id="url-input" placeholder="输入要编码/解码的 URL 或文本"></textarea>
+    <div class="actions">
+      <button class="btn primary" id="url-encode">编码 (Encode)</button>
+      <button class="btn" id="url-decode">解码 (Decode)</button>
+    </div>
+    <div class="output-area" id="url-output"></div>
+  </div>
+</div>
+
+  <!-- JWT Panel -->
+  <div class="panel" id="panel-jwt">
+    <div class="tool-title">JWT 解码器 <span class="badge pro-text">Pro</span></div>
+    <textarea id="jwt-input" placeholder="粘贴 JWT Token，例如：eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U"></textarea>
+    <div class="actions">
+      <button class="btn primary" id="jwt-decode">解码</button>
+    </div>
+    <div class="output-area" id="jwt-output"></div>
+    <div class="pro-banner">🔒 完整 JWT 工具（签发/验证/多算法支持）即将推出 Pro 版本</div>
+  </div>
+
+  <!-- Regex Panel -->
+  <div class="panel" id="panel-regex">
+    <div class="tool-title">正则表达式测试 <span class="badge pro-text">Pro</span></div>
+    <div class="row">
+      <input type="text" id="regex-pattern" placeholder="正则表达式，例如：\d{3}-\d{4}">
+      <input type="text" id="regex-flags" placeholder="标志 (g/i/m)" style="max-width:80px">
+    </div>
+    <textarea id="regex-input" placeholder="输入测试文本" style="margin-top:12px"></textarea>
+    <div class="actions">
+      <button class="btn primary" id="regex-test">测试</button>
+    </div>
+    <div class="output-area" id="regex-output"></div>
+    <div class="pro-banner">🔒 高级正则功能（替换、多行高亮、常用模式库）即将推出 Pro 版本</div>
+  </div>
+
+  <!-- Hash Panel -->
+  <div class="panel" id="panel-hash">
+    <div class="tool-title">哈希计算器 <span class="badge pro-text">Pro</span></div>
+    <textarea id="hash-input" placeholder="输入要计算哈希的文本"></textarea>
+    <div class="actions">
+      <button class="btn primary" id="hash-sha256">SHA-256</button>
+      <button class="btn" id="hash-md5">MD5</button>
+    </div>
+    <div class="output-area" id="hash-output"></div>
+    <div class="pro-banner">🔒 SHA-512、HMAC、文件哈希等高级功能即将推出 Pro 版本</div>
+  </div>
+
+  <!-- UUID Panel -->
+  <div class="panel" id="panel-uuid">
+    <div class="tool-title">UUID 生成器</div>
+    <div class="actions">
+      <button class="btn primary" id="uuid-v4">生成 UUID v4（随机）</button>
+      <button class="btn" id="uuid-bulk">批量生成 10 个</button>
+    </div>
+    <div class="output-area" id="uuid-output"></div>
+  </div>
+
+<div class="footer">
+  DevToolBox · 开发者工具箱 · <a href="#">升级 Pro <span class="badge pro-text">即将推出</span></a>
+</div>
+
+<script>
+// Tab switching
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.panel).classList.add('active');
+  });
+});
+
+// JSON tools
+document.getElementById('json-format').addEventListener('click', () => {
+  const el = document.getElementById('json-output');
+  try {
+    const obj = JSON.parse(document.getElementById('json-input').value);
+    el.innerHTML = JSON.stringify(obj, null, 2);
+    el.className = 'output-area';
+  } catch(e) {
+    el.innerHTML = '❌ JSON 解析错误：' + e.message;
+    el.className = 'output-area error';
+  }
+});
+
+document.getElementById('json-minify').addEventListener('click', () => {
+  const el = document.getElementById('json-output');
+  try {
+    const obj = JSON.parse(document.getElementById('json-input').value);
+    el.innerHTML = JSON.stringify(obj);
+    el.className = 'output-area';
+  } catch(e) {
+    el.innerHTML = '❌ JSON 解析错误：' + e.message;
+    el.className = 'output-area error';
+  }
+});
+
+document.getElementById('json-clear').addEventListener('click', () => {
+  document.getElementById('json-input').value = '';
+  document.getElementById('json-output').innerHTML = '';
+});
+
+// Timestamp tools
+document.getElementById('ts-convert').addEventListener('click', () => {
+  const val = document.getElementById('ts-input').value.trim();
+  const el = document.getElementById('ts-output');
+  if (!val) { el.innerHTML = '请输入内容'; el.className = 'output-area error'; return; }
+
+  // Try as timestamp (number)
+  if (/^\d+$/.test(val)) {
+    let ts = parseInt(val);
+    if (ts > 1e12) ts = Math.floor(ts / 1000); // ms -> s
+    const d = new Date(ts * 1000);
+    el.innerHTML = `时间戳：${ts} 秒\nUTC 时间：${d.toUTCString()}\n本地时间：${d.toLocaleString('zh-CN')}\nISO 8601：${d.toISOString()}`;
+    el.className = 'output-area';
+  } else {
+    // Try as date string
+    const d = new Date(val);
+    if (isNaN(d.getTime())) {
+      el.innerHTML = '无法解析，请输入有效时间戳或日期（如 2024-01-01 12:00:00）';
+      el.className = 'output-area error';
+    } else {
+      const ts = Math.floor(d.getTime() / 1000);
+      el.innerHTML = `秒级时间戳：${ts}\n毫秒时间戳：${d.getTime()}\nUTC：${d.toUTCString()}\n本地：${d.toLocaleString('zh-CN')}\nISO 8601：${d.toISOString()}`;
+      el.className = 'output-area';
+    }
+  }
+});
+
+document.getElementById('ts-now').addEventListener('click', () => {
+  const now = new Date();
+  document.getElementById('ts-input').value = Math.floor(now.getTime() / 1000);
+  document.getElementById('ts-convert').click();
+});
+
+// Base64 tools
+document.getElementById('b64-encode').addEventListener('click', () => {
+  const el = document.getElementById('b64-output');
+  try {
+    el.innerHTML = btoa(unescape(encodeURIComponent(document.getElementById('b64-input').value)));
+    el.className = 'output-area';
+  } catch(e) {
+    el.innerHTML = '编码失败：' + e.message;
+    el.className = 'output-area error';
+  }
+});
+
+document.getElementById('b64-decode').addEventListener('click', () => {
+  const el = document.getElementById('b64-output');
+  try {
+    el.innerHTML = decodeURIComponent(escape(atob(document.getElementById('b64-input').value)));
+    el.className = 'output-area';
+  } catch(e) {
+    el.innerHTML = '解码失败：可能是无效的 Base64 字符串';
+    el.className = 'output-area error';
+  }
+});
+
+// URL tools
+document.getElementById('url-encode').addEventListener('click', () => {
+  const el = document.getElementById('url-output');
+  el.innerHTML = encodeURIComponent(document.getElementById('url-input').value);
+  el.className = 'output-area';
+});
+
+document.getElementById('url-decode').addEventListener('click', () => {
+  const el = document.getElementById('url-output');
+  try {
+    el.innerHTML = decodeURIComponent(document.getElementById('url-input').value);
+    el.className = 'output-area';
+  } catch(e) {
+    el.innerHTML = '解码失败：URL 格式不正确';
+    el.className = 'output-area error';
+  }
+});
+
+// UUID tools
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  });
+}
+
+document.getElementById('uuid-v4').addEventListener('click', () => {
+  document.getElementById('uuid-output').innerHTML = generateUUID();
+  document.getElementById('uuid-output').className = 'output-area';
+});
+
+document.getElementById('uuid-bulk').addEventListener('click', () => {
+  const uuids = Array.from({length: 10}, () => generateUUID());
+  document.getElementById('uuid-output').innerHTML = uuids.join('\n');
+  document.getElementById('uuid-output').className = 'output-area';
+});
+
+// Hash tools (basic SHA-256 via Web Crypto API)
+async function hashText(algo) {
+  const input = document.getElementById('hash-input').value;
+  const el = document.getElementById('hash-output');
+  if (!input) { el.innerHTML = '请输入文本'; el.className = 'output-area error'; return; }
+  try {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(input);
+    const hashBuffer = await crypto.subtle.digest(algo, data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    el.innerHTML = hashHex;
+    el.className = 'output-area';
+  } catch(e) {
+    el.innerHTML = '计算失败：' + e.message;
+    el.className = 'output-area error';
+  }
+}
+
+document.getElementById('hash-sha256').addEventListener('click', () => hashText('SHA-256'));
+document.getElementById('hash-md5').addEventListener('click', () => {
+  document.getElementById('hash-output').innerHTML = 'MD5 需要 Pro 版本支持。<br>当前可用：SHA-256';
+  document.getElementById('hash-output').className = 'output-area';
+});
+
+// JWT decode (basic)
+document.getElementById('jwt-decode').addEventListener('click', () => {
+  const el = document.getElementById('jwt-output');
+  try {
+    const token = document.getElementById('jwt-input').value.trim();
+    const parts = token.split('.');
+    if (parts.length !== 3) { el.innerHTML = '无效的 JWT 格式（需要 header.payload.signature）'; el.className = 'output-area error'; return; }
+    const header = JSON.parse(atob(parts[0]));
+    const payload = JSON.parse(atob(parts[1]));
+    el.innerHTML = '=== Header ===\n' + JSON.stringify(header, null, 2) + '\n\n=== Payload ===\n' + JSON.stringify(payload, null, 2);
+    // Check expiry
+    if (payload.exp) {
+      const expDate = new Date(payload.exp * 1000);
+      const now = new Date();
+      el.innerHTML += `\n\n⏰ 过期时间：${expDate.toLocaleString('zh-CN')}`;
+      el.innerHTML += `\n${now > expDate ? '❌ 已过期' : '✅ 未过期'}`;
+    }
+    el.className = 'output-area';
+  } catch(e) {
+    el.innerHTML = '解码失败：' + e.message;
+    el.className = 'output-area error';
+  }
+});
+
+// Regex test
+document.getElementById('regex-test').addEventListener('click', () => {
+  const el = document.getElementById('regex-output');
+  try {
+    const pattern = document.getElementById('regex-pattern').value;
+    const flags = document.getElementById('regex-flags').value || 'g';
+    const text = document.getElementById('regex-input').value;
+    if (!pattern) { el.innerHTML = '请输入正则表达式'; el.className = 'output-area error'; return; }
+    const regex = new RegExp(pattern, flags);
+    const matches = text.match(regex);
+    if (matches) {
+      el.innerHTML = `✅ 匹配成功，共 ${matches.length} 处\n${matches.map((m, i) => `  [${i}] ${m}`).join('\n')}`;
+    } else {
+      el.innerHTML = '❌ 无匹配';
+    }
+    el.className = 'output-area';
+  } catch(e) {
+    el.innerHTML = '正则表达式错误：' + e.message;
+    el.className = 'output-area error';
+  }
+});
+
+</script>
+</body>
+</html>

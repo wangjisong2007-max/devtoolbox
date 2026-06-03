@@ -1,0 +1,23 @@
+{
+  "name": "devtoolbox-cli",
+  "version": "1.0.0",
+  "description": "🔧 DevToolBox CLI - JSON/Base64/UUID/Timestamp/Hash tools in your terminal",
+  "main": "index.js",
+  "bin": {
+    "devtool": "./index.js"
+  },
+  "scripts": {
+    "test": "node index.js --help"
+  },
+  "keywords": ["cli", "devtools", "json", "base64", "uuid", "timestamp", "hash", "developer-tools"],
+  "author": "DevToolBox",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wangjisong2007-max/devtoolbox"
+  },
+  "homepage": "https://wangjisong2007-max.github.io/devtoolbox/",
+  "dependencies": {
+    "commander": "^14.0.0"
+  }
+}
